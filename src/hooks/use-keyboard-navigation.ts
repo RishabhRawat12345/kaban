@@ -1,48 +1,63 @@
-import React, { useRef } from 'react';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import type { Task } from '../types/kanban';
+import { useCallback, useEffect, useRef } from 'react';
 
-interface KanbanCardProps {
-  task: Task;
-  onMoveFocus: (direction: 'up' | 'down' | 'left' | 'right') => void;
-  onOpenDetails: (task: Task) => void;
-  onCancel: () => void;
+interface KeyboardNavigationOptions {
+  onMove?: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  onSelect?: () => void;
+  onCancel?: () => void;
+  enabled?: boolean;
 }
 
-export const KanbanCard: React.FC<KanbanCardProps> = ({
-  task,
-  onMoveFocus,
-  onOpenDetails,
+export function useKeyboardNavigation({
+  onMove,
+  onSelect,
   onCancel,
-}) => {
-  const cardRef = useRef<HTMLDivElement>(null);
+  enabled = true,
+}: KeyboardNavigationOptions) {
+  const activeElementRef = useRef<HTMLElement | null>(null);
 
-  // Hook for keyboard navigation
-  useKeyboardNavigation({
-    onMove: (direction) => {
-      console.log(`Moving ${direction}`);
-      onMoveFocus(direction);
-    },
-    onSelect: () => {
-      console.log(`Selecting task: ${task.title}`);
-      onOpenDetails(task);
-    },
-    onCancel: () => {
-      console.log('Cancel pressed');
-      onCancel();
-    },
-  });
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!enabled) return;
 
-  return (
-    <div
-      ref={cardRef}
-      tabIndex={0} // Enable keyboard focus
-      className="p-3 bg-white border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    >
-      <h4 className="font-semibold">{task.title || 'New Task'}</h4>
-      {task.description && (
-        <p className="text-sm text-gray-500">{task.description}</p>
-      )}
-    </div>
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          if (onMove) onMove('up');
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          if (onMove) onMove('down');
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          if (onMove) onMove('left');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          if (onMove) onMove('right');
+          break;
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          if (onSelect) onSelect();
+          break;
+        case 'Escape':
+          event.preventDefault();
+          if (onCancel) onCancel();
+          break;
+      }
+    },
+    [enabled, onMove, onSelect, onCancel]
   );
-};
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [enabled, handleKeyDown]);
+
+  return { activeElementRef };
+}
