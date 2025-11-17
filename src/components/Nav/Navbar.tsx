@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Bell, ChevronDown, Plus, User } from 'lucide-react';
 
 export default function Navbar() {
-  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
