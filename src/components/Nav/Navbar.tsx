@@ -1,5 +1,3 @@
-// components/Navbar.tsx
-import { useState } from 'react';
 import { Bell, ChevronDown, Plus, User } from 'lucide-react';
 
 export default function Navbar() {
